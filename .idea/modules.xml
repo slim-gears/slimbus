@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/slimbus.iml" filepath="$PROJECT_DIR$/slimbus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/slimbus-apt/slimbus-apt.iml" filepath="$PROJECT_DIR$/slimbus-apt/slimbus-apt.iml" />
+      <module fileurl="file://$PROJECT_DIR$/slimbus-core/slimbus-core.iml" filepath="$PROJECT_DIR$/slimbus-core/slimbus-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/slimbus-example/slimbus-example.iml" filepath="$PROJECT_DIR$/slimbus-example/slimbus-example.iml" />
+    </modules>
+  </component>
+</project>

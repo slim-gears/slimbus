@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Slim Bus Example</string>
+    <string name="title_main">Main activity</string>
+</resources>

@@ -1,0 +1,81 @@
+apply plugin: "android-sdk-manager"
+apply plugin: "com.android.$project.androidProjectType"
+apply plugin: 'me.tatarka.retrolambda'
+apply plugin: "com.neenbedankt.android-apt"
+
+ext.isApplicationProject = (androidProjectType == 'application')
+
+configurations {
+    apt
+}
+
+retrolambda {
+    jdk System.getenv("JAVA8_HOME")
+    oldJdk System.getenv("JAVA_HOME")
+    javaVersion JavaVersion.VERSION_1_7
+    defaultMethods false
+    incremental true
+}
+
+android {
+    compileSdkVersion rootProject.compileSdkVersion
+    buildToolsVersion rootProject.buildToolsVersion
+
+    packagingOptions {
+        exclude 'LICENSE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude '.readme'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    defaultConfig {
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
+        versionCode rootProject.versionCode
+        versionName rootProject.versionName
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled isApplicationProject
+            shrinkResources isApplicationProject
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (isApplicationProject) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+android.testOptions.unitTests.all {
+    afterTest { descriptor, result ->
+        println "TEST ${result.resultType} - ${descriptor.name}"
+    }
+}
+
+dependencies {
+    compile fileTree(dir: "$rootProject.projectDir/libs", include: ['*.jar'])
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    testCompile "junit:junit:$junitVersion"
+    testCompile "org.mockito:mockito-core:$mockitoVersion"
+    testCompile ("org.robolectric:robolectric:$robolectricVersion") {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+}
