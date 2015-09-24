@@ -1,1 +1,1 @@
-# slimbus
+# SlimBus
