@@ -6,7 +6,7 @@ import com.annimon.stream.Stream;
 import com.slimgears.slimbus.core.interfaces.EventBus;
 import com.slimgears.slimbus.core.utilities.ListMap;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -14,40 +14,33 @@ import java.util.List;
  *
  */
 @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-public class SlimEventBus implements EventBus {
-    private final ListMap<Class, ListenerInvoker> invokerMap = new ListMap<>();
+public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
+    private final ListMap<Class, HandlerInvoker> invokerMap = new ListMap<>();
     private final ListMap<Class, Object> stickedEventsMap = new ListMap<>();
     private final Handler handler = new Handler();
-    private final List<SubscriberResolver> resolvers = new ArrayList<>();
+    private final List<SubscriberResolver> resolvers;
 
-    static abstract class AbstractSubscriber implements Subscriber {
-        private final SlimEventBus eventBus;
+    public static abstract class AbstractObjectSubscriber implements Subscriber {
+        private final HandlerInvokerRegistrar registrar;
 
-        protected AbstractSubscriber(SlimEventBus eventBus) {
-            this.eventBus = eventBus;
+        protected AbstractObjectSubscriber(HandlerInvokerRegistrar registrar) {
+            this.registrar = registrar;
         }
 
-        protected <E> Unsubscriber addInvoker(Class<E> eventClass, final ListenerInvoker<E> invoker) {
-            final List<ListenerInvoker> invokers = eventBus.getInvokers(eventClass);
-            invokers.add(invoker);
-            Stream.of(eventBus.getStickedEvents(eventClass))
-                    .forEach(invoker::invoke);
-            return () -> invokers.remove(invoker);
-        }
-
-        protected abstract List<Subscriber> getSubscribers();
+        protected abstract Unsubscriber[] addInvokers(HandlerInvokerRegistrar registrar);
 
         public Unsubscriber subscribe() {
-            final List<Unsubscriber> unsubscribers = new ArrayList<>();
-            for (Subscriber subscriber : getSubscribers()) {
-                unsubscribers.add(subscriber.subscribe());
-            }
-            return () -> {
-                for (Unsubscriber unsubscriber : unsubscribers) {
-                    unsubscriber.unsubscribe();
-                }
-            };
+            final Unsubscriber[] unsubscribers = addInvokers(registrar);
+            return () -> Stream.of(unsubscribers).forEach(Unsubscriber::unsubscribe);
         }
+    }
+
+    public <E> Unsubscriber addInvoker(Class<E> eventClass, final HandlerInvoker<E> invoker) {
+        final List<HandlerInvoker> invokers = getInvokers(eventClass);
+        invokers.add(invoker);
+        Stream.of(getStickedEvents(eventClass))
+                .forEach(invoker::invoke);
+        return () -> invokers.remove(invoker);
     }
 
     private <E> List<E> getStickedEvents(Class<E> eventClass) {
@@ -55,7 +48,7 @@ public class SlimEventBus implements EventBus {
         return (List<E>)stickedEventsMap.getOrPut(eventClass);
     }
 
-    private <E> List<ListenerInvoker> getInvokers(Class<E> eventClass) {
+    private <E> List<HandlerInvoker> getInvokers(Class<E> eventClass) {
         return invokerMap.getOrPut(eventClass);
     }
 
@@ -64,9 +57,8 @@ public class SlimEventBus implements EventBus {
         return (Class<E>)event.getClass();
     }
 
-    public SlimEventBus addResolver(SubscriberResolver resolver) {
-        resolvers.add(resolver);
-        return this;
+    public SlimEventBus(SubscriberResolver... resolvers) {
+        this.resolvers = Arrays.asList(resolvers);
     }
 
     @Override
@@ -118,7 +110,7 @@ public class SlimEventBus implements EventBus {
     private <S> Subscriber getSubscriberForProvider(Class<S> subscriberClass, Provider<S> provider) {
         //noinspection unchecked
         return Stream.of(resolvers)
-                .map(r -> r.resovle(subscriberClass, provider))
+                .map(r -> r.resovle(this, subscriberClass, provider))
                 .filter(s -> s != null)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Could not resolve subscriber. Please use EventBus.addResolver()"));
