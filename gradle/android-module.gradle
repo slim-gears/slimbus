@@ -51,9 +51,6 @@ android {
             minifyEnabled isApplicationProject
             shrinkResources isApplicationProject
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (isApplicationProject) {
-                signingConfig signingConfigs.release
-            }
         }
     }
 }
