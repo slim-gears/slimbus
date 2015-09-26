@@ -1,45 +1,6 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:1.2.3'
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
-        classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.12.0'
-    }
-}
+ext.androidProjectType = 'application'
 
-apply plugin: 'com.android.application'
-apply plugin: 'com.neenbedankt.android-apt'
-
-configurations {
-    apt
-}
-
-android {
-    compileSdkVersion 23
-    buildToolsVersion "22.0.1"
-
-    defaultConfig {
-        applicationId "com.slimgears.slimbus.example"
-        minSdkVersion 10
-        targetSdkVersion 23
-        versionCode 1
-        versionName version
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-}
-
-android.testOptions.unitTests.all {
-    afterTest { descriptor, result ->
-        println "TEST ${result.resultType} - ${descriptor.name}"
-    }
-}
+apply from: "$rootProject.projectDir/gradle/android-module.gradle"
 
 dependencies {
     //compile 'com.slimgears.slimbus:slimbus-android:0.1.0'
@@ -47,10 +8,4 @@ dependencies {
     //compile project(':slimbus-apt')
     apt project(':slimbus-apt')
     compile project(':slimbus-android')
-
-    testCompile "junit:junit:$junitVersion"
-    testCompile "org.mockito:mockito-core:$mockitoVersion"
-    testCompile ("org.robolectric:robolectric:$robolectricVersion") {
-        exclude group: 'commons-logging', module: 'commons-logging'
-    }
 }
