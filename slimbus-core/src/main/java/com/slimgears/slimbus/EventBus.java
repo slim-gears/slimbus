@@ -9,8 +9,12 @@ public interface EventBus {
         S provide();
     }
 
-    interface PublishCallback<E> {
+    interface DeliveryCallback<E> {
         void onDelivered(E event);
+    }
+
+    interface ErrorHandler<E> {
+        void onError(E event, Throwable error);
     }
 
     interface Unsubscriber {
@@ -21,12 +25,27 @@ public interface EventBus {
         Unsubscriber subscribe();
     }
 
+    interface Publisher {
+        void publish();
+    }
+
+    interface PublishBuilderBase<E, B extends PublishBuilderBase<E, B>> extends Publisher {
+        B sticky();
+        B stickyClearPrevious();
+    }
+
+    interface PublishBuilder<E> extends Publisher, PublishBuilderBase<E, PublishBuilder<E>> {
+        AsyncPublishBuilder<E> async();
+        AsyncPublishBuilder<E> delayed(long millis);
+    }
+
+    interface AsyncPublishBuilder<E> extends Publisher, PublishBuilderBase<E, AsyncPublishBuilder<E>> {
+        AsyncPublishBuilder<E> onDelivered(DeliveryCallback<E> callback);
+        AsyncPublishBuilder<E> onError(ErrorHandler<E> callback);
+    }
+
     <E> void publish(E event);
-    <E> void publishAsync(E event, PublishCallback<E> callback);
-    <E> void publishSticky(E event);
-    <E> void publishSingleSticky(E event);
-    <E> void publishDelayed(E event, long delayMilliseconds);
-    <E> void publishDelayed(E event, long delayMilliseconds, PublishCallback<E> callback);
+    <E> PublishBuilder<E> publishBuilder(E event);
 
     <S> Unsubscriber subscribe(S subscriber);
     <S> Unsubscriber subscribeProvider(Class<S> subscriberClass, Provider<S> provider);

@@ -14,6 +14,10 @@ import org.robolectric.annotation.Config;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
 /**
  * Created by Denis on 24/09/2015.
  *
@@ -41,11 +45,11 @@ public class SlimEventBusTest {
         bus.subscribe(handler);
         bus.publish(newEvent(30));
         Assert.assertEquals(1, handler.receivedEvents.size());
-        Assert.assertEquals(30, handler.receivedEvents.get(0).data);
+        Assert.assertEquals(lastEvent.data, handler.receivedEvents.get(0).data);
 
         bus.publish(newEvent(40));
         Assert.assertEquals(2, handler.receivedEvents.size());
-        Assert.assertEquals(40, handler.receivedEvents.get(1).data);
+        Assert.assertEquals(lastEvent.data, handler.receivedEvents.get(1).data);
     }
 
     @Test
@@ -59,20 +63,20 @@ public class SlimEventBusTest {
         Assert.assertEquals(1, firstHandler().receivedEvents.size());
         Assert.assertEquals(1, lastHandler().receivedEvents.size());
         Assert.assertEquals(30, firstHandler().receivedEvents.get(0).data);
-        Assert.assertEquals(40, lastHandler().receivedEvents.get(0).data);
+        Assert.assertEquals(lastEvent.data, lastHandler().receivedEvents.get(0).data);
     }
 
     @Test
     public void testPublishThenSubscribeShouldNotReceive() {
         DummyHandler handler = new DummyHandler();
-        bus.publish(new DummyEvent(20));
+        bus.publish(newEvent());
         bus.subscribe(handler);
         Assert.assertEquals(0, handler.receivedEvents.size());
     }
 
     @Test
     public void testPublishStickyMultipleTimesThenSubscribeShouldReceiveMultipleTimes() {
-        bus.publishSticky(new DummyEvent(10));
+        bus.publishBuilder(newEvent(10)).sticky().publish();
         bus.subscribe(newHandler());
 
         Assert.assertEquals(1, handlers.get(0).receivedEvents.size());
@@ -80,7 +84,7 @@ public class SlimEventBusTest {
 
         forAllHandlers(h -> Assert.assertEquals(1, h.receivedEvents.size()));
 
-        bus.publishSticky(new DummyEvent(20));
+        bus.publishBuilder(newEvent(20)).sticky().publish();
         bus.subscribe(newHandler());
 
         forAllHandlers(h -> Assert.assertEquals(2, h.receivedEvents.size()));
@@ -88,19 +92,19 @@ public class SlimEventBusTest {
 
     @Test
     public void testPublishStickyThenPublishSingleStickyThenSubscribeShouldReceiveOnce() {
-        bus.publishSticky(newEvent(10));
-        bus.publishSingleSticky(newEvent(20));
+        bus.publishBuilder(newEvent(10)).sticky().publish();
+        bus.publishBuilder(newEvent(20)).stickyClearPrevious().publish();
 
         bus.subscribe(newHandler());
         Assert.assertEquals(1, firstHandler().receivedEvents.size());
-        Assert.assertEquals(20, firstHandler().receivedEvents.get(0).data);
+        Assert.assertEquals(lastEvent.data, firstHandler().receivedEvents.get(0).data);
     }
 
     @Test
     public void testSubscribeThenPublishAsyncSubscriberShouldReceiveAsynchronously() {
         bus.subscribe(newHandler());
         Robolectric.getForegroundThreadScheduler().pause();
-        bus.publishAsync(newEvent(20), this::onEventDelivered);
+        bus.publishBuilder(newEvent()).async().onDelivered(this::onEventDelivered).publish();
         Assert.assertEquals(0, firstHandler().receivedEvents.size());
         Robolectric.flushForegroundThreadScheduler();
         Assert.assertEquals(1, firstHandler().receivedEvents.size());
@@ -110,12 +114,23 @@ public class SlimEventBusTest {
     @Test
     public void testSubscribePublishDelayedShouldReceiveAsynchronously() {
         bus.subscribe(newHandler());
-        bus.publishDelayed(newEvent(10), 9999);
-        bus.publishDelayed(newEvent(20), 10000, this::onEventDelivered);
+        bus.publishBuilder(newEvent()).delayed(9999).publish();
+        bus.publishBuilder(newEvent()).delayed(10000).onDelivered(this::onEventDelivered).publish();
         Assert.assertEquals(0, firstHandler().receivedEvents.size());
         Robolectric.getForegroundThreadScheduler().advanceBy(10001);
         Assert.assertEquals(2, firstHandler().receivedEvents.size());
         Assert.assertEquals(1, asyncDeliveredEvents.size());
+    }
+
+    @Test
+    public void testErrorDuringAsyncPublishHandlerShouldBeCalled() {
+        bus.subscribe(newHandler(e -> { throw new RuntimeException(); }));
+        //noinspection unchecked
+        EventBus.ErrorHandler<DummyEvent> errorHandler = mock(EventBus.ErrorHandler.class);
+        Robolectric.getForegroundThreadScheduler().pause();
+        bus.publishBuilder(newEvent()).async().onError(errorHandler).publish();
+        Robolectric.flushForegroundThreadScheduler();
+        verify(errorHandler).onError(any(), any());
     }
 
     private DummyEvent newEvent(int data) {
@@ -131,7 +146,14 @@ public class SlimEventBusTest {
     }
 
     private DummyHandler newHandler() {
-        DummyHandler handler = new DummyHandler();
+        return addHandler(new DummyHandler());
+    }
+
+    private DummyHandler newHandler(DummyHandler.Callback callback) {
+        return addHandler(new DummyHandler(callback));
+    }
+
+    private DummyHandler addHandler(DummyHandler handler) {
         handlers.add(handler);
         return handler;
     }

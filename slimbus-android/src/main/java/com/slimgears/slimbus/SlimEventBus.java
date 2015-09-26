@@ -18,22 +18,103 @@ import java.util.List;
 @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
 public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
     private final ListMap<Class, HandlerInvoker> invokerMap = new ListMap<>();
-    private final ListMap<Class, Object> stickedEventsMap = new ListMap<>();
+    private final ListMap<Class, Object> stuckEventsMap = new ListMap<>();
     private final Handler handler = new Handler();
     private final List<SubscriberResolver> resolvers;
+
+    class PublishSpec<E> {
+        boolean sticky = false;
+        boolean clearPrevious = false;
+        boolean async = true;
+        long delay = 0;
+        DeliveryCallback<E> deliveryCallback;
+        ErrorHandler<E> errorHandler;
+        final E event;
+
+        public PublishSpec(E event) {
+            this.event = event;
+        }
+
+        public PublishBuilder<E> builder() {
+            return new Builder();
+        }
+
+        class Builder implements PublishBuilder<E> {
+            class Async implements AsyncPublishBuilder<E> {
+                @Override
+                public AsyncPublishBuilder<E> onDelivered(DeliveryCallback<E> callback) {
+                    PublishSpec.this.deliveryCallback = callback;
+                    return this;
+                }
+
+                @Override
+                public AsyncPublishBuilder<E> onError(ErrorHandler<E> callback) {
+                    errorHandler = callback;
+                    return this;
+                }
+
+                @Override
+                public AsyncPublishBuilder<E> sticky() {
+                    Builder.this.sticky();
+                    return this;
+                }
+
+                @Override
+                public AsyncPublishBuilder<E> stickyClearPrevious() {
+                    Builder.this.stickyClearPrevious();
+                    return this;
+                }
+
+                @Override
+                public void publish() {
+                    Builder.this.publish();
+                }
+            }
+
+            @Override
+            public PublishBuilder<E> sticky() {
+                sticky = true;
+                return this;
+            }
+
+            @Override
+            public PublishBuilder<E> stickyClearPrevious() {
+                clearPrevious = true;
+                return sticky();
+            }
+
+            @Override
+            public AsyncPublishBuilder<E> async() {
+                async = true;
+                return new Async();
+            }
+
+            @Override
+            public AsyncPublishBuilder<E> delayed(long millis) {
+                async = true;
+                delay = millis;
+                return new Async();
+            }
+
+            @Override
+            public void publish() {
+                publishWithSpec(PublishSpec.this);
+            }
+        }
+    }
 
     public <E> Unsubscriber addInvoker(Class<E> eventClass, final HandlerInvoker<E> invoker) {
         final List<HandlerInvoker> invokers = getInvokers(eventClass);
         invokers.add(invoker);
-        for (E event : getStickedEvents(eventClass)) {
+        for (E event : getStuckEvents(eventClass)) {
             invoker.invoke(event);
         }
         return () -> invokers.remove(invoker);
     }
 
-    private <E> List<E> getStickedEvents(Class<E> eventClass) {
+    private <E> List<E> getStuckEvents(Class<E> eventClass) {
         //noinspection unchecked
-        return (List<E>)stickedEventsMap.getOrPut(eventClass);
+        return (List<E>)stuckEventsMap.getOrPut(eventClass);
     }
 
     private <E> List<HandlerInvoker> getInvokers(Class<E> eventClass) {
@@ -58,38 +139,8 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
     }
 
     @Override
-    public <E> void publishAsync(E event, PublishCallback<E> callback) {
-        handler.post(() -> {
-            publish(event);
-            callback.onDelivered(event);
-        });
-    }
-
-    @Override
-    public <E> void publishSticky(E event) {
-        publish(event);
-        getStickedEvents(getEventClass(event)).add(event);
-    }
-
-    @Override
-    public <E> void publishSingleSticky(E event) {
-        publish(event);
-        List<E> stickedEvents = getStickedEvents(getEventClass(event));
-        stickedEvents.clear();
-        stickedEvents.add(event);
-    }
-
-    @Override
-    public <E> void publishDelayed(E event, long delayMilliseconds) {
-        handler.postDelayed(() -> publish(event), delayMilliseconds);
-    }
-
-    @Override
-    public <E> void publishDelayed(E event, long delayMilliseconds, PublishCallback<E> callback) {
-        handler.postDelayed(() -> {
-            publish(event);
-            callback.onDelivered(event);
-        }, delayMilliseconds);
+    public <E> PublishBuilder<E> publishBuilder(E event) {
+        return new PublishSpec<>(event).builder();
     }
 
     @Override
@@ -110,6 +161,48 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
             if (subscriber != null) return subscriber;
         }
         throw new RuntimeException("Could not resolve subscriber. Please use EventBus.addResolver()");
+    }
+
+    class PublishRunnable<E> implements Runnable {
+        private final PublishSpec<E> spec;
+
+        PublishRunnable(PublishSpec<E> spec) {
+            this.spec = spec;
+        }
+
+        @Override
+        public void run() {
+            try {
+                if (spec.sticky) publishSticky(spec.event, spec.clearPrevious);
+                else publish(spec.event);
+
+                if (spec.deliveryCallback != null) {
+                    spec.deliveryCallback.onDelivered(spec.event);
+                }
+            } catch (Throwable e) {
+                if (spec.errorHandler != null) {
+                    spec.errorHandler.onError(spec.event, e);
+                }
+            }
+        }
+    }
+
+    private <E> void publishSticky(E event, boolean clearPrevious) {
+        List<E> stuckEvents = getStuckEvents(getEventClass(event));
+        if (clearPrevious) stuckEvents.clear();
+        stuckEvents.add(event);
+        publish(event);
+    }
+
+    private <E> void publishWithSpec(final PublishSpec<E> spec) {
+        Runnable runnable = new PublishRunnable<>(spec);
+
+        if (spec.async) {
+            if (spec.delay > 0) handler.postDelayed(runnable, spec.delay);
+            else handler.post(runnable);
+        } else {
+            runnable.run();
+        }
     }
 
     private <S> Subscriber resolveSubscriber(SubscriberResolver resolver, Class<S> subscriberClass, Provider<S> provider) {

@@ -8,10 +8,26 @@ import java.util.List;
  *
  */
 class DummyHandler {
+    interface Callback {
+        void onEvent(DummyEvent event);
+    }
+
     public final List<DummyEvent> receivedEvents = new ArrayList<>();
+    public final Callback callback;
+
+    public DummyHandler() {
+        this(null);
+    }
+
+    public DummyHandler(Callback callback) {
+        this.callback = callback;
+    }
 
     @Subscribe
     public void onDummyEvent(DummyEvent event) {
         receivedEvents.add(event);
+        if (callback != null) {
+            callback.onEvent(event);
+        }
     }
 }
