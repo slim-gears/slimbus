@@ -33,6 +33,19 @@ public class SlimEventBusTest {
     private DummyEvent lastEvent;
     private List<DummyEvent> asyncDeliveredEvents = new ArrayList<>();
     private List<DummyHandler> handlers = new ArrayList<>();
+    private EventBus.Provider<DummyHandler> newHandlerProvider = new EventBus.Provider<DummyHandler>() {
+        @Override
+        public DummyHandler provide() {
+            return newHandler();
+        }
+    };
+
+    private EventBus.DeliveryCallback<DummyEvent> onDeliveredCallback = new EventBus.DeliveryCallback<DummyEvent>() {
+        @Override
+        public void onDelivered(DummyEvent event) {
+            onEventDelivered(event);
+        }
+    };
 
     @Before
     public void setUp() {
@@ -54,7 +67,7 @@ public class SlimEventBusTest {
 
     @Test
     public void testSubscribeProviderThenPublishShouldReceive() {
-        bus.subscribeProvider(DummyHandler.class, this::newHandler);
+        bus.subscribeProvider(DummyHandler.class, newHandlerProvider);
 
         bus.publish(newEvent(30));
         bus.publish(newEvent(40));
@@ -82,12 +95,15 @@ public class SlimEventBusTest {
         Assert.assertEquals(1, handlers.get(0).receivedEvents.size());
         bus.subscribe(newHandler());
 
-        forAllHandlers(h -> Assert.assertEquals(1, h.receivedEvents.size()));
+        Assert.assertEquals(1, handlers.get(0).receivedEvents.size());
+        Assert.assertEquals(1, handlers.get(1).receivedEvents.size());
 
         bus.publishBuilder(newEvent(20)).sticky().publish();
         bus.subscribe(newHandler());
 
-        forAllHandlers(h -> Assert.assertEquals(2, h.receivedEvents.size()));
+        Assert.assertEquals(2, handlers.get(0).receivedEvents.size());
+        Assert.assertEquals(2, handlers.get(1).receivedEvents.size());
+        Assert.assertEquals(2, handlers.get(2).receivedEvents.size());
     }
 
     @Test
@@ -104,7 +120,7 @@ public class SlimEventBusTest {
     public void testSubscribeThenPublishAsyncSubscriberShouldReceiveAsynchronously() {
         bus.subscribe(newHandler());
         Robolectric.getForegroundThreadScheduler().pause();
-        bus.publishBuilder(newEvent()).async().onDelivered(this::onEventDelivered).publish();
+        bus.publishBuilder(newEvent()).async().onDelivered(onDeliveredCallback).publish();
         Assert.assertEquals(0, firstHandler().receivedEvents.size());
         Robolectric.flushForegroundThreadScheduler();
         Assert.assertEquals(1, firstHandler().receivedEvents.size());
@@ -115,7 +131,7 @@ public class SlimEventBusTest {
     public void testSubscribePublishDelayedShouldReceiveAsynchronously() {
         bus.subscribe(newHandler());
         bus.publishBuilder(newEvent()).delayed(9999).publish();
-        bus.publishBuilder(newEvent()).delayed(10000).onDelivered(this::onEventDelivered).publish();
+        bus.publishBuilder(newEvent()).delayed(10000).onDelivered(onDeliveredCallback).publish();
         Assert.assertEquals(0, firstHandler().receivedEvents.size());
         Robolectric.getForegroundThreadScheduler().advanceBy(10001);
         Assert.assertEquals(2, firstHandler().receivedEvents.size());
@@ -124,13 +140,18 @@ public class SlimEventBusTest {
 
     @Test
     public void testErrorDuringAsyncPublishHandlerShouldBeCalled() {
-        bus.subscribe(newHandler(e -> { throw new RuntimeException(); }));
+        bus.subscribe(newHandler(new DummyHandler.Callback() {
+            @Override
+            public void onEvent(DummyEvent event) {
+                throw new RuntimeException();
+            }
+        }));
         //noinspection unchecked
         EventBus.ErrorHandler<DummyEvent> errorHandler = mock(EventBus.ErrorHandler.class);
         Robolectric.getForegroundThreadScheduler().pause();
         bus.publishBuilder(newEvent()).async().onError(errorHandler).publish();
         Robolectric.flushForegroundThreadScheduler();
-        verify(errorHandler).onError(any(), any());
+        verify(errorHandler).onError(any(DummyEvent.class), any(Throwable.class));
     }
 
     private DummyEvent newEvent(int data) {
@@ -164,11 +185,5 @@ public class SlimEventBusTest {
 
     private DummyHandler lastHandler() {
         return handlers.get(handlers.size() - 1);
-    }
-
-    private void forAllHandlers(Assertion<DummyHandler> handlerAssertion) {
-        for (DummyHandler handler : handlers) {
-            handlerAssertion.validate(handler);
-        }
     }
 }

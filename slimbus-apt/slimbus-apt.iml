@@ -38,6 +38,5 @@
     <orderEntry type="library" exported="" scope="TEST" name="byte-buddy-0.6.14" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="objenesis-2.1" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="tools" level="project" />
-    <orderEntry type="library" exported="" name="slimbus-apt.slimbus-apt-0.1.0" level="project" />
   </component>
 </module>

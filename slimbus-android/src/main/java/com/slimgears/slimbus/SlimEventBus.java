@@ -109,7 +109,13 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
         for (E event : getStuckEvents(eventClass)) {
             invoker.invoke(event);
         }
-        return () -> invokers.remove(invoker);
+
+        return new Unsubscriber() {
+            @Override
+            public void unsubscribe() {
+                invokers.remove(invoker);
+            }
+        };
     }
 
     private <E> List<E> getStuckEvents(Class<E> eventClass) {
@@ -144,10 +150,15 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
     }
 
     @Override
-    public <S> Unsubscriber subscribe(S subscriber) {
+    public <S> Unsubscriber subscribe(final S subscriber) {
         //noinspection unchecked
         Class<S> subscriberClass = (Class<S>)subscriber.getClass();
-        return subscribeProvider(subscriberClass, () -> subscriber);
+        return subscribeProvider(subscriberClass, new Provider<S>() {
+            @Override
+            public S provide() {
+                return subscriber;
+            }
+        });
     }
 
     @Override
@@ -231,9 +242,12 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
         public Unsubscriber subscribe() {
             final Unsubscriber[] unsubscribers = classSubscriber.subscribe(registrar, provider);
 
-            return () -> {
-                for (Unsubscriber unsubscriber : unsubscribers) {
-                    unsubscriber.unsubscribe();
+            return new Unsubscriber() {
+                @Override
+                public void unsubscribe() {
+                    for (Unsubscriber unsubscriber : unsubscribers) {
+                        unsubscriber.unsubscribe();
+                    }
                 }
             };
         }
