@@ -9,6 +9,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/slimbus-android" />
             <option value="$PROJECT_DIR$/slimbus-apt" />
             <option value="$PROJECT_DIR$/slimbus-core" />
             <option value="$PROJECT_DIR$/slimbus-example" />

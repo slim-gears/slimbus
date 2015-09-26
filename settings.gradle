@@ -1,1 +1,1 @@
-include ':slimbus-core', ':slimbus-apt', ':slimbus-example'
+include ':slimbus-core', ':slimbus-apt', ':slimbus-example', ':slimbus-android'

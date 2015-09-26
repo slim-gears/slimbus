@@ -1,2 +1,1 @@
-slimbus.apt.EntityAnnotationProcessor
-slimbus.apt.RepositoryAnnotationProcessor
+com.slimgears.slimbus.apt.SubscribeAnnotationProcessor

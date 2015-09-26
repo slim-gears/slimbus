@@ -3,29 +3,27 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.3.0'
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.4'
-        classpath 'org.robolectric:robolectric-gradle-plugin:1.1.0'
+        classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
         classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.12.0'
     }
 }
 
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
-apply plugin: 'org.robolectric'
 
 configurations {
     apt
 }
 
 android {
-    compileSdkVersion 22
+    compileSdkVersion 23
     buildToolsVersion "22.0.1"
 
     defaultConfig {
         applicationId "com.slimgears.slimbus.example"
         minSdkVersion 10
-        targetSdkVersion 22
+        targetSdkVersion 23
         versionCode 1
         versionName version
     }
@@ -44,10 +42,11 @@ android.testOptions.unitTests.all {
 }
 
 dependencies {
-    //compile 'com.slimgears.slimbus:slimbus-core:0.1.0'
+    //compile 'com.slimgears.slimbus:slimbus-android:0.1.0'
     //apt 'com.slimgears.slimbus:slimbus-apt:0.1.0'
-    compile project(':slimbus-core')
+    //compile project(':slimbus-apt')
     apt project(':slimbus-apt')
+    compile project(':slimbus-android')
 
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-core:$mockitoVersion"

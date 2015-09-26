@@ -27,8 +27,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="javapoet-1.0.0" level="project" />
+    <orderEntry type="module" module-name="slimbus-core" exported="" />
     <orderEntry type="library" exported="" name="guava-18.0" level="project" />
+    <orderEntry type="library" exported="" name="javapoet-1.0.0" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="junit-4.12" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="compile-testing-0.6" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="truth-0.25" level="project" />

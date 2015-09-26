@@ -13,7 +13,9 @@ ext {
     commonsIoVersion = '2.4'
     javaPoetVersion = '1.0.0'
     guavaVersion = '18.0'
+    daggerVersion = '2.0.1'
     googleTruthVersion = '0.25'
+    jsr250Version = '1.0'
     compileTestingVersion = '0.6'
 }
 
