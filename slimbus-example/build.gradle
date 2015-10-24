@@ -1,11 +1,12 @@
-ext.androidProjectType = 'application'
+ext {
+    androidProjectType = 'application'
+}
 
 apply from: "$rootProject.projectDir/gradle/android-module.gradle"
 
 dependencies {
     //compile 'com.slimgears.slimbus:slimbus-android:0.1.0'
     //apt 'com.slimgears.slimbus:slimbus-apt:0.1.0'
-    provided project(':slimbus-apt')
     apt project(':slimbus-apt')
     compile project(':slimbus-android')
 }
