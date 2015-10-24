@@ -2,8 +2,11 @@ apply plugin: "android-sdk-manager"
 apply plugin: "com.android.$project.androidProjectType"
 //apply plugin: 'me.tatarka.retrolambda'
 apply plugin: "com.neenbedankt.android-apt"
+apply plugin: "idea"
 
-ext.isApplicationProject = (androidProjectType == 'application')
+ext {
+    isApplicationProject = (androidProjectType == 'application')
+}
 
 configurations {
     apt
@@ -23,20 +26,15 @@ android {
 
     packagingOptions {
         exclude 'LICENSE.txt'
+        exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE'
-        exclude '.readme'
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
-    }
-
-    lintOptions {
-        checkReleaseBuilds false
-        abortOnError false
     }
 
     defaultConfig {
@@ -66,10 +64,8 @@ android.testOptions.unitTests.all {
     }
 }
 
-dependencies {
-    compile fileTree(dir: "$rootProject.projectDir/libs", include: ['*.jar'])
-    compile fileTree(dir: 'libs', include: ['*.jar'])
 
+dependencies {
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mockito:mockito-core:$mockitoVersion"
     testCompile ("org.robolectric:robolectric:$robolectricVersion") {

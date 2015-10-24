@@ -1,6 +1,8 @@
+ext {
+    pkg_desc = 'Slim Bus Core Library'
+    pkg_labels = ['java','eventbus']
+}
+
 apply from: "$rootProject.projectDir/gradle/java-module.gradle"
-
-ext.pkg_desc = 'Slim Bus Core Library'
-ext.pkg_labels = ['java','eventbus']
-
+apply from: "$rootProject.projectDir/gradle/java-maven-publish.gradle"
 apply from: "$rootProject.projectDir/gradle/bintray-publish.gradle"

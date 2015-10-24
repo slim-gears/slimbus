@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'maven-publish'
 apply plugin: 'idea'
 
 sourceCompatibility = JavaVersion.VERSION_1_7
@@ -22,18 +21,6 @@ task sourceJar(type: Jar) {
 
 processTestResources.dependsOn copyTestResources
 processResources.dependsOn copyResources
-
-publishing {
-    repositories {
-        mavenLocal()
-    }
-    publications {
-        maven(MavenPublication) {
-            from components.java
-            artifact (sourceJar)
-        }
-    }
-}
 
 test {
     afterTest { descriptor, result ->
