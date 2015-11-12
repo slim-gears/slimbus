@@ -1,7 +1,5 @@
 package com.slimgears.slimbus;
 
-import com.slimgears.slimbus.subscribers.GeneratedSubscriberResolver;
-
 import junit.framework.Assert;
 
 import org.junit.Before;
@@ -49,7 +47,7 @@ public class SlimEventBusTest {
 
     @Before
     public void setUp() {
-        bus = new SlimEventBus(GeneratedSubscriberResolver.INSTANCE);
+        bus = GeneratedBusFactory.INSTANCE.createEventBus();
     }
 
     @Test

@@ -54,7 +54,7 @@ public class SubscribeAnnotationProcessorTest {
     public void testClassSubscriberGeneration() {
         testAnnotationProcessing(
                 new SubscribeAnnotationProcessor(),
-                inputFiles("SampleInput.java", "DummyEvent.java"),
-                expectedFiles("GeneratedSampleInputSubscriber.java", "GeneratedSubscriberResolver.java"));
+                inputFiles("SampleInput.java", "DummyEvent.java", "DummyContainer.java"),
+                expectedFiles("GeneratedSampleInputSubscriber.java", "GeneratedDummyContainer_DummyBusFactory.java"));
     }
 }

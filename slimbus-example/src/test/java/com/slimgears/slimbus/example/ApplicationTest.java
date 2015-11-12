@@ -1,7 +1,5 @@
 package com.slimgears.slimbus.example;
 
-import android.app.Activity;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,8 +11,6 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowToast;
 import org.robolectric.util.ActivityController;
 
-import java.io.IOException;
-
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 16,
         manifest = "build/intermediates/manifests/full/" + BuildConfig.BUILD_TYPE + "/AndroidManifest.xml",
@@ -22,10 +18,6 @@ import java.io.IOException;
 public class ApplicationTest {
     private ActivityController<MainActivity> mainActivityController;
     private App app;
-
-    private static <T extends Activity> T activateActivity(ActivityController<T> controller) {
-        return controller.start().resume().visible().get();
-    }
 
     @Before
     public void setUp() {
@@ -49,10 +41,5 @@ public class ApplicationTest {
     public void testNotifications() {
         app.bus().publish(new NotificationEvent("Test notification"));
         Assert.assertEquals("Test notification", ShadowToast.getTextOfLatestToast());
-    }
-
-    @Test
-    public void testRobolectricSanity() throws IOException {
-        Assert.assertNotNull(RuntimeEnvironment.application);
     }
 }

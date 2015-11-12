@@ -1,11 +1,14 @@
 package com.slimgears.slimbus.apt;
 
+import com.slimgears.slimbus.BusFactory;
+import com.slimgears.slimbus.EventBus;
 import com.slimgears.slimbus.apt.base.ClassGenerator;
+import com.slimgears.slimbus.apt.base.TypeUtils;
 import com.slimgears.slimbus.internal.AbstractSubscriberResolver;
-import com.slimgears.slimbus.internal.SubscriberResolver;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import java.util.Collection;
@@ -13,45 +16,37 @@ import java.util.Collection;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.MirroredTypeException;
 
 /**
  * Created by Denis on 25/09/2015.
  *
  */
-public class SubscriberResolverGenerator extends ClassGenerator<SubscriberResolverGenerator> {
+public class EventBusFactoryGenerator extends ClassGenerator<EventBusFactoryGenerator> {
     private final Collection<ClassSubscriberGenerator> classSubscriberGenerators;
+    private final TypeName busType;
 
-    public SubscriberResolverGenerator(ProcessingEnvironment processingEnvironment, Collection<ClassSubscriberGenerator> classSubscriberGenerators) {
+    public EventBusFactoryGenerator(ProcessingEnvironment processingEnvironment, TypeElement baseInterface, Collection<ClassSubscriberGenerator> classSubscriberGenerators) {
         super(processingEnvironment);
         this.classSubscriberGenerators = classSubscriberGenerators;
 
-        this
-            .className(calculatePackageName(classSubscriberGenerators), "GeneratedSubscriberResolver")
-            .superClass(AbstractSubscriberResolver.class);
-    }
-
-    private static String calculatePackageName(Iterable<ClassSubscriberGenerator> generators) {
-        String commonPackageName = null;
-        for (ClassSubscriberGenerator generator : generators) {
-            commonPackageName = getCommonPrefix(generator.getPackageName(), commonPackageName);
-        }
-        return (commonPackageName == null || commonPackageName.isEmpty()) ? "" : commonPackageName;
-    }
-
-    private static String getCommonPrefix(String a, String b) {
-        if (b == null) return a;
-        else if (a == null) return b;
-
-        int size = Math.min(a.length(), b.length());
-        for (int i = 0; i < size; ++i) {
-            if (a.charAt(i) != b.charAt(i)) {
-                String common = a.substring(0, i);
-                if (common.endsWith(".")) return common.substring(0, common.length() - 1);
+        BusFactory annotation = baseInterface.getAnnotation(BusFactory.class);
+        busType = TypeUtils.getTypeFromAnnotation(annotation, new TypeUtils.AnnotationTypeGetter<BusFactory>() {
+            @Override
+            public Class getType(BusFactory annotation) throws MirroredTypeException {
+                return annotation.busClass();
             }
-        }
-        return a.substring(0, size);
-    }
+        });
 
+        String qualifiedName = TypeUtils.qualifiedName(baseInterface);
+        String packageName = TypeUtils.packageName(qualifiedName);
+        String simpleName = "Generated" + TypeUtils.simpleName(qualifiedName).replace('$', '_');
+
+        this
+            .className(packageName, simpleName)
+            .superClass(AbstractSubscriberResolver.class)
+            .addInterfaces(baseInterface);
+    }
 
     @Override
     protected void build(TypeSpec.Builder builder, TypeElement type, TypeElement... interfaces) {
@@ -60,7 +55,7 @@ public class SubscriberResolverGenerator extends ClassGenerator<SubscriberResolv
                 .addField(
                         FieldSpec
                                 .builder(
-                                        ClassName.get(SubscriberResolver.class),
+                                        ClassName.get(interfaces[0]),
                                         "INSTANCE",
                                         Modifier.FINAL, Modifier.STATIC, Modifier.PUBLIC)
                                 .initializer("new $T()", getTypeName())
@@ -74,5 +69,12 @@ public class SubscriberResolverGenerator extends ClassGenerator<SubscriberResolv
         }
 
         builder.addMethod(constructorBuilder.build());
+        builder.addMethod(MethodSpec
+                .methodBuilder("createEventBus")
+                .addAnnotation(Override.class)
+                .returns(EventBus.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addCode("return new $T(this);\n", busType)
+                .build());
     }
 }
