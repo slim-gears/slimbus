@@ -47,7 +47,7 @@ public class SlimEventBusTest {
 
     @Before
     public void setUp() {
-        bus = GeneratedBusFactory.INSTANCE.createEventBus();
+        bus = GeneratedSlimEventBusFactory.INSTANCE.createEventBus();
     }
 
     @Test

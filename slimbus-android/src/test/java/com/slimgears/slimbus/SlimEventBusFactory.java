@@ -6,5 +6,6 @@ package com.slimgears.slimbus;
  * Created by ditskovi on 11/11/2015.
  *
  */
-public interface BusFactory extends EventBusFactory {
+@BusFactory(busClass = SlimEventBus.class)
+public interface SlimEventBusFactory extends EventBusFactory {
 }
