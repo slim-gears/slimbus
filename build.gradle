@@ -17,11 +17,15 @@ buildscript {
 apply from: "$rootProject.projectDir/versions.gradle"
 apply plugin: 'root-project-aio'
 
+def getProjectOrEnvProperty(String projectProp, String envVar) {
+    if (project.hasProperty(projectProp)) return project[projectProp]
+    return System.getenv(envVar)
+}
 
 aioConfig {
     publishingAio {
-        bintrayUser = project.bintrayUser
-        bintrayKey = project.bintrayKey
+        bintrayUser = getProjectOrEnvProperty('bintrayUser', 'BINTRAY_USER')
+        bintrayKey = getProjectOrEnvProperty('bintrayKey', 'BINTRAY_KEY')
         githubOrg = 'slim-gears'
     }
 
