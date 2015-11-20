@@ -1,12 +1,12 @@
-ext {
-    androidProjectType = 'library'
-    pkg_desc = 'Slim Bus Android Core Library'
-    pkg_labels = ['android','java','eventbus']
+aioConfig {
+    publishingAio {
+        description = 'Slim Bus Android Core Library'
+        labels = ['android','java','eventbus']
+    }
 }
 
-apply from: "$rootProject.projectDir/gradle/android-module.gradle"
-apply from: "$rootProject.projectDir/gradle/android-maven-publish.gradle"
-apply from: "$rootProject.projectDir/gradle/bintray-publish.gradle"
+apply plugin: 'android-lib-aio'
+apply plugin: 'publishing-aio'
 
 dependencies {
     compile project(':slimbus-core')

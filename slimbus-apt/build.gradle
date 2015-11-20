@@ -1,23 +1,21 @@
 import org.gradle.internal.jvm.Jvm
 
-ext {
-    pkg_desc = 'Slim Bus Annotation Processor'
-    pkg_labels = ['java','eventbus','apt']
+aioConfig {
+    publishingAio {
+        description = 'Slim Bus Annotation Processor'
+        labels = ['java','eventbus','apt']
+    }
 }
 
-apply from: "$rootProject.projectDir/gradle/java-module.gradle"
-apply from: "$rootProject.projectDir/gradle/java-maven-publish.gradle"
-apply from: "$rootProject.projectDir/gradle/bintray-publish.gradle"
+apply plugin: 'java-lib-aio'
+apply plugin: 'publishing-aio'
 
 dependencies {
     compile "com.google.guava:guava:$guavaVersion"
     compile "com.squareup:javapoet:$javaPoetVersion"
     compile project(':slimbus-core')
 
-    testCompile "junit:junit:$junitVersion"
     testCompile "com.google.testing.compile:compile-testing:$compileTestingVersion"
     testCompile "com.google.truth:truth:$googleTruthVersion"
-    testCompile "org.mockito:mockito-core:$mockitoVersion"
-
     testCompile files(Jvm.current().getToolsJar())
 }

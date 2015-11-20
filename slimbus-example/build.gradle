@@ -1,8 +1,56 @@
-ext {
-    androidProjectType = 'application'
+buildscript {
+    repositories {
+        jcenter()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.5.0'
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.4'
+    }
 }
 
-apply from: "$rootProject.projectDir/gradle/android-module.gradle"
+apply plugin: "android-sdk-manager"
+apply plugin: "com.android.application"
+apply plugin: "com.neenbedankt.android-apt"
+apply plugin: "idea"
+
+configurations {
+    apt
+}
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '23.0.1'
+
+    packagingOptions {
+        exclude 'LICENSE.txt'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 23
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
 
 dependencies {
     //compile 'com.slimgears.slimbus:slimbus-android:0.1.0'
@@ -10,4 +58,8 @@ dependencies {
     apt project(':slimbus-apt')
     //provided project(':slimbus-apt')
     compile project(':slimbus-android')
+
+    testCompile "junit:junit:4.12"
+    testCompile "org.mockito:mockito-core:2.0.31-beta"
+    testCompile "org.robolectric:robolectric:3.0"
 }

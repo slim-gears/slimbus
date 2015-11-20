@@ -1,6 +1,5 @@
 apply plugin: "android-sdk-manager"
 apply plugin: "com.android.$project.androidProjectType"
-//apply plugin: 'me.tatarka.retrolambda'
 apply plugin: "com.neenbedankt.android-apt"
 apply plugin: "idea"
 
