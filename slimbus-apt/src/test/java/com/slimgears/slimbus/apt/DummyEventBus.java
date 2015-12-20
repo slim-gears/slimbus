@@ -25,12 +25,17 @@ public class DummyEventBus implements EventBus {
     }
 
     @Override
-    public <S> Unsubscriber subscribe(S subscriber) {
+    public void clearSticky(Class eventClass) {
+
+    }
+
+    @Override
+    public <S> Subscription subscribe(S subscriber) {
         return null;
     }
 
     @Override
-    public <S> Unsubscriber subscribeProvider(Class<S> subscriberClass, Provider<S> provider) {
+    public <S> Subscription subscribeProvider(Class<S> subscriberClass, Provider<S> provider) {
         return null;
     }
 }

@@ -76,13 +76,13 @@ class ClassSubscriberGenerator extends ClassGenerator<ClassSubscriberGenerator> 
                 .methodBuilder("subscribe")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
-                .returns(ArrayTypeName.of(EventBus.Unsubscriber.class))
+                .returns(ArrayTypeName.of(EventBus.Subscription.class))
                 .addParameter(HandlerInvokerRegistrar.class, "registrar")
                 .addParameter(
                         ParameterizedTypeName.get(ClassName.get(EventBus.Provider.class), subscriberTypeName),
                         "provider",
                         Modifier.FINAL)
-                .addCode("return new $T[] {\n", EventBus.Unsubscriber.class);
+                .addCode("return new $T[] {\n", EventBus.Subscription.class);
 
         for (HandlerInfo handler : handlers) {
             subscribeMethodBuilder

@@ -11,8 +11,8 @@ public class GeneratedSampleInputSubscriber implements ClassSubscriber<SampleInp
     public static final Class<SampleInput> SUBSCRIBER_CLASS = SampleInput.class;
 
     @Override
-    public EventBus.Unsubscriber[] subscribe(HandlerInvokerRegistrar registrar, final EventBus.Provider<SampleInput> provider) {
-        return new EventBus.Unsubscriber[] {
+    public EventBus.Subscription[] subscribe(HandlerInvokerRegistrar registrar, final EventBus.Provider<SampleInput> provider) {
+        return new EventBus.Subscription[] {
                 registrar.addInvoker(DummyEvent.class, new HandlerInvoker<DummyEvent>() {
                     @Override
                     public void invoke(DummyEvent event) {

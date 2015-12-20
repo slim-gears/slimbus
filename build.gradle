@@ -1,5 +1,3 @@
-import groovy.json.JsonBuilder
-
 buildscript {
     repositories {
         jcenter()
@@ -9,7 +7,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.slim-gears:gradle-aio:0.4.1'
+        classpath 'com.slimgears.gradle-aio:gradle-aio:0.4.7'
         //classpath 'com.slimgears.gradle-aio:gradle-aio:0.4-SNAPSHOT'
     }
 }
@@ -17,15 +15,8 @@ buildscript {
 apply from: "$rootProject.projectDir/versions.gradle"
 apply plugin: 'root-project-aio'
 
-def getProjectOrEnvProperty(String projectProp, String envVar) {
-    if (project.hasProperty(projectProp)) return project[projectProp]
-    return System.getenv(envVar)
-}
-
 aioConfig {
     publishingAio {
-        bintrayUser = getProjectOrEnvProperty('bintrayUser', 'BINTRAY_USER')
-        bintrayKey = getProjectOrEnvProperty('bintrayKey', 'BINTRAY_KEY')
         githubOrg = 'slim-gears'
     }
 

@@ -6,5 +6,5 @@ import com.slimgears.slimbus.EventBus;
  * Created by Denis on 25/09/2015.
  */
 public interface ClassSubscriber<S> {
-    EventBus.Unsubscriber[] subscribe(HandlerInvokerRegistrar registrar, EventBus.Provider<S> provider);
+    EventBus.Subscription[] subscribe(HandlerInvokerRegistrar registrar, EventBus.Provider<S> provider);
 }

@@ -17,12 +17,12 @@ public interface EventBus {
         void onError(E event, Throwable error);
     }
 
-    interface Unsubscriber {
+    interface Subscription {
         void unsubscribe();
     }
 
     interface Subscriber {
-        Unsubscriber subscribe();
+        Subscription subscribe();
     }
 
     interface Publisher {
@@ -46,7 +46,8 @@ public interface EventBus {
 
     <E> void publish(E event);
     <E> PublishBuilder<E> publishBuilder(E event);
+    void clearSticky(Class eventClass);
 
-    <S> Unsubscriber subscribe(S subscriber);
-    <S> Unsubscriber subscribeProvider(Class<S> subscriberClass, Provider<S> provider);
+    <S> Subscription subscribe(S subscriber);
+    <S> Subscription subscribeProvider(Class<S> subscriberClass, Provider<S> provider);
 }

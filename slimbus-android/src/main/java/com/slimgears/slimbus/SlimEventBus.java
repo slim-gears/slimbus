@@ -103,19 +103,14 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
         }
     }
 
-    public <E> Unsubscriber addInvoker(Class<E> eventClass, final HandlerInvoker<E> invoker) {
+    public <E> Subscription addInvoker(Class<E> eventClass, final HandlerInvoker<E> invoker) {
         final List<HandlerInvoker> invokers = getInvokers(eventClass);
         invokers.add(invoker);
         for (E event : getStuckEvents(eventClass)) {
             invoker.invoke(event);
         }
 
-        return new Unsubscriber() {
-            @Override
-            public void unsubscribe() {
-                invokers.remove(invoker);
-            }
-        };
+        return () -> invokers.remove(invoker);
     }
 
     private <E> List<E> getStuckEvents(Class<E> eventClass) {
@@ -150,19 +145,19 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
     }
 
     @Override
-    public <S> Unsubscriber subscribe(final S subscriber) {
-        //noinspection unchecked
-        Class<S> subscriberClass = (Class<S>)subscriber.getClass();
-        return subscribeProvider(subscriberClass, new Provider<S>() {
-            @Override
-            public S provide() {
-                return subscriber;
-            }
-        });
+    public void clearSticky(Class eventClass) {
+        getStuckEvents(eventClass).clear();
     }
 
     @Override
-    public <S> Unsubscriber subscribeProvider(Class<S> subscriberClass, Provider<S> provider) {
+    public <S> Subscription subscribe(final S subscriber) {
+        //noinspection unchecked
+        Class<S> subscriberClass = (Class<S>)subscriber.getClass();
+        return subscribeProvider(subscriberClass, () -> subscriber);
+    }
+
+    @Override
+    public <S> Subscription subscribeProvider(Class<S> subscriberClass, Provider<S> provider) {
         return getSubscriberForProvider(subscriberClass, provider).subscribe();
     }
 
@@ -239,15 +234,12 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
             this.classSubscriber = classSubscriber;
         }
 
-        public Unsubscriber subscribe() {
-            final Unsubscriber[] unsubscribers = classSubscriber.subscribe(registrar, provider);
+        public Subscription subscribe() {
+            final Subscription[] subscriptions = classSubscriber.subscribe(registrar, provider);
 
-            return new Unsubscriber() {
-                @Override
-                public void unsubscribe() {
-                    for (Unsubscriber unsubscriber : unsubscribers) {
-                        unsubscriber.unsubscribe();
-                    }
+            return () -> {
+                for (Subscription subscription : subscriptions) {
+                    subscription.unsubscribe();
                 }
             };
         }

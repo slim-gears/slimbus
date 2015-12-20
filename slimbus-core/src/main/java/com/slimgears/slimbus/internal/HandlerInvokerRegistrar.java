@@ -7,5 +7,5 @@ import com.slimgears.slimbus.EventBus;
  *
  */
 public interface HandlerInvokerRegistrar {
-    <E> EventBus.Unsubscriber addInvoker(Class<E> eventClass, HandlerInvoker<E> handlerInvoker);
+    <E> EventBus.Subscription addInvoker(Class<E> eventClass, HandlerInvoker<E> handlerInvoker);
 }
