@@ -166,7 +166,7 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
             Subscriber subscriber = resolveSubscriber(resolver, subscriberClass, provider);
             if (subscriber != null) return subscriber;
         }
-        throw new RuntimeException("Could not resolve subscriber. Please use EventBus.addResolver()");
+        return () -> () -> {};
     }
 
     class PublishRunnable<E> implements Runnable {
