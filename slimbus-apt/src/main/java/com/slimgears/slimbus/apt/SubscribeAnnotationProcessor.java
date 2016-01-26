@@ -3,6 +3,7 @@ package com.slimgears.slimbus.apt;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.slimgears.slimapt.AnnotationProcessorBase;
 import com.slimgears.slimbus.BusFactory;
 import com.slimgears.slimbus.EventBusFactory;
 import com.slimgears.slimbus.Subscribe;

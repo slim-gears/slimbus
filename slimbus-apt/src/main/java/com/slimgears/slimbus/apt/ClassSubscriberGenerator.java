@@ -1,8 +1,8 @@
 package com.slimgears.slimbus.apt;
 
+import com.slimgears.slimapt.ClassGenerator;
+import com.slimgears.slimapt.TypeUtils;
 import com.slimgears.slimbus.EventBus;
-import com.slimgears.slimbus.apt.base.ClassGenerator;
-import com.slimgears.slimbus.apt.base.TypeUtils;
 import com.slimgears.slimbus.internal.ClassSubscriber;
 import com.slimgears.slimbus.internal.HandlerInvoker;
 import com.slimgears.slimbus.internal.HandlerInvokerRegistrar;

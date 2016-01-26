@@ -7,4 +7,5 @@ ext {
     jsr250Version = '1.0'
     compileTestingVersion = '0.6'
     guavaVersion = '18.0'
+    slimAptVersion = '0.1.4'
 }

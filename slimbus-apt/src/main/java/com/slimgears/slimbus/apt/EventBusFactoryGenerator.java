@@ -1,9 +1,9 @@
 package com.slimgears.slimbus.apt;
 
+import com.slimgears.slimapt.ClassGenerator;
+import com.slimgears.slimapt.TypeUtils;
 import com.slimgears.slimbus.BusFactory;
 import com.slimgears.slimbus.EventBus;
-import com.slimgears.slimbus.apt.base.ClassGenerator;
-import com.slimgears.slimbus.apt.base.TypeUtils;
 import com.slimgears.slimbus.internal.AbstractSubscriberResolver;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -16,7 +16,6 @@ import java.util.Collection;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.MirroredTypeException;
 
 /**
  * Created by Denis on 25/09/2015.
@@ -31,12 +30,7 @@ public class EventBusFactoryGenerator extends ClassGenerator<EventBusFactoryGene
         this.classSubscriberGenerators = classSubscriberGenerators;
 
         BusFactory annotation = baseInterface.getAnnotation(BusFactory.class);
-        busType = TypeUtils.getTypeFromAnnotation(annotation, new TypeUtils.AnnotationTypeGetter<BusFactory>() {
-            @Override
-            public Class getType(BusFactory annotation) throws MirroredTypeException {
-                return annotation.busClass();
-            }
-        });
+        busType = TypeUtils.getTypeFromAnnotation(annotation, BusFactory::busClass);
 
         String qualifiedName = TypeUtils.qualifiedName(baseInterface);
         String packageName = TypeUtils.packageName(qualifiedName);

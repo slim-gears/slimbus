@@ -13,9 +13,11 @@ apply plugin: 'publishing-aio'
 dependencies {
     compile "com.google.guava:guava:$guavaVersion"
     compile "com.squareup:javapoet:$javaPoetVersion"
+    compile "com.github.slim-gears:slimapt:$slimAptVersion"
     compile project(':slimbus-core')
 
     testCompile "com.google.testing.compile:compile-testing:$compileTestingVersion"
     testCompile "com.google.truth:truth:$googleTruthVersion"
+    testCompile "com.github.slim-gears:slimapt:$slimAptVersion:tests"
     testCompile files(Jvm.current().getToolsJar())
 }
