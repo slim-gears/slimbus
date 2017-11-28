@@ -133,9 +133,14 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
 
     @Override
     public <E> void publish(E event) {
-        //noinspection unchecked
-        for (HandlerInvoker<E> invoker : getInvokers(getEventClass(event))) {
-            invoker.invoke(event);
+        Class eventClass = getEventClass(event);
+        while (eventClass != Object.class) {
+            Iterable<HandlerInvoker> invokers = invokerMap.get(eventClass);
+            for (HandlerInvoker invoker : invokers) {
+                //noinspection unchecked
+                invoker.invoke(event);
+            }
+            eventClass = eventClass.getSuperclass();
         }
     }
 

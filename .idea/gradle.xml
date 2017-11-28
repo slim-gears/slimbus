@@ -14,15 +14,7 @@
             <option value="$PROJECT_DIR$/slimbus-example" />
           </set>
         </option>
-        <option name="myModules">
-          <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/slimbus-android" />
-            <option value="$PROJECT_DIR$/slimbus-apt" />
-            <option value="$PROJECT_DIR$/slimbus-core" />
-            <option value="$PROJECT_DIR$/slimbus-example" />
-          </set>
-        </option>
+        <option name="resolveModulePerSourceSet" value="false" />
       </GradleProjectSettings>
     </option>
   </component>

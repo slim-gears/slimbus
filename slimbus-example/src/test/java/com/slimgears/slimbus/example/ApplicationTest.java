@@ -38,7 +38,7 @@ public class ApplicationTest {
 
     @Test
     public void testNotifications() {
-        app.bus().publish(new NotificationEvent("Test notification"));
+        app.bus().publish(new NotificationEvent("Test notification"){});
         Assert.assertEquals("Test notification", ShadowToast.getTextOfLatestToast());
     }
 }

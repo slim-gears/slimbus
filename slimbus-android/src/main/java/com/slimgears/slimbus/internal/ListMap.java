@@ -1,6 +1,7 @@
 package com.slimgears.slimbus.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -9,12 +10,18 @@ import java.util.List;
  *
  */
 public class ListMap<K, V> extends HashMap<K, List<V>> {
+    @Override
+    public List<V> get(Object key) {
+        List<V> list = super.get(key);
+        return list != null ? list : Collections.emptyList();
+    }
+
     public List<V> getOrPut(K key) {
-        if (!containsKey(key)) {
-            List<V> list = new ArrayList<>();
+        List<V> list = super.get(key);
+        if (list == null) {
+            list = new ArrayList<>();
             put(key, list);
-            return list;
         }
-        return get(key);
+        return list;
     }
 }
