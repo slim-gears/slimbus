@@ -17,6 +17,7 @@ import java.util.List;
  */
 @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
 public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
+    private final static Subscriber EMPTY_SUBSCRIBER = () -> () -> {};
     private final ListMap<Class, HandlerInvoker> invokerMap = new ListMap<>();
     private final ListMap<Class, Object> stuckEventsMap = new ListMap<>();
     private final Handler handler = new Handler();
@@ -31,11 +32,11 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
         ErrorHandler<E> errorHandler;
         final E event;
 
-        public PublishSpec(E event) {
+        PublishSpec(E event) {
             this.event = event;
         }
 
-        public PublishBuilder<E> builder() {
+        PublishBuilder<E> builder() {
             return new Builder();
         }
 
@@ -151,6 +152,7 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
 
     @Override
     public void clearSticky(Class eventClass) {
+        //noinspection unchecked
         getStuckEvents(eventClass).clear();
     }
 
@@ -166,12 +168,36 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
         return getSubscriberForProvider(subscriberClass, provider).subscribe();
     }
 
-    private <S> Subscriber getSubscriberForProvider(Class<S> subscriberClass, Provider<S> provider) {
-        for (SubscriberResolver resolver : resolvers) {
-            Subscriber subscriber = resolveSubscriber(resolver, subscriberClass, provider);
-            if (subscriber != null) return subscriber;
+    private <S> Subscriber getSubscriberForProvider(Class subscriberClass, Provider<S> provider) {
+        Subscriber subscriber = EMPTY_SUBSCRIBER;
+        while (subscriberClass != Object.class) {
+            for (SubscriberResolver resolver : resolvers) {
+                //noinspection unchecked
+                Subscriber resolvedSubscriber = resolveSubscriber(resolver, subscriberClass, provider);
+                subscriber = chainSubscriber(subscriber, resolvedSubscriber);
+            }
+            subscriberClass = subscriberClass.getSuperclass();
         }
-        return () -> () -> {};
+        return subscriber;
+    }
+
+    private Subscriber chainSubscriber(Subscriber first, Subscriber second) {
+        if (first == EMPTY_SUBSCRIBER) {
+            return second;
+        }
+
+        if (second == EMPTY_SUBSCRIBER) {
+            return first;
+        }
+
+        return () -> {
+            Subscription firstSubscription = first.subscribe();
+            Subscription secondSubscription = second.subscribe();
+            return () -> {
+                firstSubscription.unsubscribe();
+                secondSubscription.unsubscribe();
+            };
+        };
     }
 
     class PublishRunnable<E> implements Runnable {
@@ -221,7 +247,7 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
         if (classSubscriber != null) {
             return new ObjectSubscriber<>(this, provider, classSubscriber);
         }
-        return null;
+        return EMPTY_SUBSCRIBER;
     }
 
     /**
@@ -233,7 +259,7 @@ public class SlimEventBus implements EventBus, HandlerInvokerRegistrar {
         private final Provider<S> provider;
         private final ClassSubscriber<S> classSubscriber;
 
-        public ObjectSubscriber(HandlerInvokerRegistrar registrar, Provider<S> provider, ClassSubscriber<S> classSubscriber) {
+        ObjectSubscriber(HandlerInvokerRegistrar registrar, Provider<S> provider, ClassSubscriber<S> classSubscriber) {
             this.registrar = registrar;
             this.provider = provider;
             this.classSubscriber = classSubscriber;
